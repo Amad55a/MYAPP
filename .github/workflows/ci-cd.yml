@@ -71,11 +71,16 @@ jobs:
             fi
           done
 
+          npm ci --omit=dev --prefix release
+
           tar -czf release.tar.gz -C release .
+          sha256sum release.tar.gz > release.sha256
 
       - name: Upload release artifact
         uses: actions/upload-artifact@v4
         with:
           name: devops-world-release
-          path: release.tar.gz
+          path: |
+            release.tar.gz
+            release.sha256
           retention-days: 7
