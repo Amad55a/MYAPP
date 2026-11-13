@@ -84,3 +84,44 @@ jobs:
             release.tar.gz
             release.sha256
           retention-days: 7
+
+  deploy:
+    name: Deploy to the server
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production
+
+    concurrency:
+      group: production
+      cancel-in-progress: false
+
+    steps:
+      - name: Download the release
+        uses: actions/download-artifact@v4
+        with:
+          name: devops-world-release
+
+      - name: Set up the SSH key
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+      - name: Send the release to the server
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          APP_ENV: ${{ secrets.APP_ENV }}
+        run: |
+          printf '%s\n' "$APP_ENV" | tr -d '\r' > app.env
+          tar -cf - release.tar.gz app.env | ssh -i ~/.ssh/deploy_key -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            "deploy@$DEPLOY_HOST" "$GITHUB_SHA $(cut -d ' ' -f1 release.sha256)"
+
+      - name: Delete the SSH key and settings
+        if: always()
+        run: rm -f ~/.ssh/deploy_key app.env
