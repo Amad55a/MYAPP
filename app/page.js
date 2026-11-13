@@ -241,7 +241,7 @@ export default function Home() {
       <main>
         <section className="hero section-wrap" id="home">
           <div className="hero-copy">
-            <p className="hero-badge"><span /> THE WORLD OF DEVOPS</p>
+            <p className="hero-badge"><span /> THE WORLD OF DEVOPS Amad</p>
             <h1>BUILD.<br />AUTOMATE.<br /><span>DEPLOY. SCALE.</span></h1>
             <p className="hero-description">
               Discover the world of DevOps engineering. Learn how developers and operations teams build, automate, deploy, monitor, and scale modern applications across cloud platforms and physical infrastructure.
